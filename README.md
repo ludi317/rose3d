@@ -1,7 +1,13 @@
+
+
+
 # rose3d
 
 Interactive 3D rose viewer — Paul Nylander's parametric rose surface
 ([bugman123.com](http://bugman123.com/Math/Rose.lsp), 2009) with live sliders.
+
+https://github.com/user-attachments/assets/16365ea6-c78e-4728-b051-a107736fc904
+
 
 ![rose](screenshot.png)
 
