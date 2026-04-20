@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>rose3d — interactive</title>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.4/lib/p5.min.js"></script>
+<style>
+  body { margin: 0; background: #111; color: #ddd; font: 13px/1.4 -apple-system, sans-serif; }
+  #canvas-holder { position: fixed; inset: 0; }
+  #panel {
+    position: fixed; top: 12px; left: 12px; padding: 12px 14px;
+    background: rgba(20,20,20,0.85); border: 1px solid #333; border-radius: 6px;
+    width: 280px;
+  }
+  #panel h1 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+  #panel .row { margin: 6px 0; }
+  #panel label { display: block; font-size: 11px; color: #aaa; }
+  #panel input[type=range] { width: 100%; }
+  #panel .val { color: #fff; font-variant-numeric: tabular-nums; }
+  #panel .hint { margin-top: 10px; font-size: 11px; color: #888; }
+  #panel button { width: 100%; margin-top: 8px; padding: 6px;
+    background: #2a2a2a; color: #ddd; border: 1px solid #444;
+    border-radius: 4px; cursor: pointer; font: inherit; }
+  #panel button:hover { background: #333; }
+</style>
+</head>
+<body>
+<div id="canvas-holder"></div>
+<div id="panel">
+  <h1>rose3d — Nylander parametric</h1>
+  <div class="row">
+    <label>Flower opening: <span class="val" id="v-opening"></span></label>
+    <input type="range" id="opening" min="1" max="10" step="0.05" value="2">
+  </div>
+  <div class="row">
+    <label>Vertical density: <span class="val" id="v-vDensity"></span></label>
+    <input type="range" id="vDensity" min="1" max="20" step="0.1" value="8">
+  </div>
+  <div class="row">
+    <label>Petal alignment: <span class="val" id="v-pAlign"></span></label>
+    <input type="range" id="pAlign" min="0" max="6" step="0.05" value="3.6">
+  </div>
+  <div class="row">
+    <label>Curvature 1: <span class="val" id="v-curve1"></span></label>
+    <input type="range" id="curve1" min="-6" max="6" step="0.05" value="1.9565">
+  </div>
+  <div class="row">
+    <label>Curvature 2: <span class="val" id="v-curve2"></span></label>
+    <input type="range" id="curve2" min="0.5" max="1.5" step="0.01" value="1.2769">
+  </div>
+  <button id="reset">Reset to Nylander defaults</button>
+  <div class="hint">Drag to orbit · scroll to zoom</div>
+</div>
+
+<script>
+const COLS = 360;
+const ROWS = 28;
+const T_D_RAD = (15 * Math.PI) / COLS;  // theta step in radians (15π total span)
+const R_D = 1 / ROWS;
+
+const ids = ['opening', 'vDensity', 'pAlign', 'curve1', 'curve2'];
+const defaults = { opening: 2, vDensity: 8, pAlign: 3.6, curve1: 1.9565, curve2: 1.2769 };
+const vals = { ...defaults };
+let dirty = true;
+
+ids.forEach(id => {
+  const el = document.getElementById(id);
+  const out = document.getElementById('v-' + id);
+  const update = () => {
+    vals[id] = parseFloat(el.value);
+    out.textContent = vals[id].toFixed(2);
+    dirty = true;
+  };
+  el.addEventListener('input', update);
+  update();
+});
+document.getElementById('reset').addEventListener('click', () => {
+  ids.forEach(id => {
+    document.getElementById(id).value = defaults[id];
+    document.getElementById(id).dispatchEvent(new Event('input'));
+  });
+});
+
+new p5((p) => {
+  let geom = null;
+
+  const buildGeometry = () => {
+    const g = new p5.Geometry();
+    const halfPi = Math.PI / 2;
+    const twoPi = 2 * Math.PI;
+
+    for (let r = 0; r <= ROWS; r++) {
+      const x1 = r * R_D;
+      const x1sq = x1 * x1;
+      for (let theta = 0; theta <= COLS; theta++) {
+        const th = theta * T_D_RAD;
+        const phi = (halfPi / (vals.opening / 2)) * Math.exp(-th / (vals.vDensity * Math.PI));
+        const sphi = Math.sin(phi), cphi = Math.cos(phi);
+
+        const wrap = ((vals.pAlign * th) % twoPi + twoPi) % twoPi;
+        const w = wrap / Math.PI;  // 0..2
+        const inner = 1.25 * (1 - w) * (1 - w) - 0.25;
+        const petalCut = 1 - 0.5 * inner * inner;
+
+        const k = vals.curve2 * x1 - 1;
+        const hangDown = vals.curve1 * x1sq * k * k * sphi;
+        const radial = x1 * sphi + hangDown * cphi;
+
+        const sth = Math.sin(th), cth = Math.cos(th);
+        g.vertices.push(p.createVector(
+           260 * petalCut * radial * sth,
+          -260 * petalCut * (x1 * cphi - hangDown * sphi),
+           260 * petalCut * radial * cth,
+        ));
+      }
+    }
+
+    const cols1 = COLS + 1;
+    for (let r = 0; r < ROWS; r++) {
+      for (let theta = 0; theta < COLS; theta++) {
+        const a = r * cols1 + theta;
+        const b = (r + 1) * cols1 + theta;
+        const c = (r + 1) * cols1 + theta + 1;
+        const d = r * cols1 + theta + 1;
+        g.faces.push([a, b, c]);
+        g.faces.push([a, c, d]);
+      }
+    }
+
+    g.computeNormals();
+    return g;
+  };
+
+  p.setup = () => {
+    const c = p.createCanvas(p.windowWidth, p.windowHeight, p.WEBGL);
+    c.parent('canvas-holder');
+    p.noStroke();
+  };
+
+  p.windowResized = () => p.resizeCanvas(p.windowWidth, p.windowHeight);
+
+  p.draw = () => {
+    if (dirty) {
+      if (geom) p.freeGeometry(geom);
+      geom = buildGeometry();
+      dirty = false;
+    }
+
+    p.clear();
+    p.background(17);
+    p.orbitControl(4, 4);
+    p.rotateX(-Math.PI / 6);
+
+    p.ambientLight(60, 50, 50);
+    p.directionalLight(255, 230, 220, 0.5, -0.7, -0.5);
+    p.ambientMaterial(165, 8, 10);
+    p.fill(165, 8, 10);
+    p.specularMaterial(80, 30, 30);
+    p.shininess(20);
+
+    p.model(geom);
+  };
+});
+</script>
+</body>
+</html>
