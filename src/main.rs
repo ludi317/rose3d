@@ -51,9 +51,14 @@ fn pseudo_random(seed: u32) -> f64 {
 
 /// Parabolic bowl surface: z height at radial distance r from center.
 /// Inner petals sit high, outer petals sit lower on the bowl rim.
+/// Coefficients chosen for a depth/radius ratio > 1 (deep bowl, not a disc).
 fn bowl_z(r: f64) -> f64 {
-    0.12 - 1.5 * r * r
+    0.20 - 3.0 * r * r
 }
+
+/// Top of the stem / bottom of the receptacle taper.
+/// Pushed below the deeper bowl rim so the underside taper has room.
+const STEM_TOP_Z: f64 = -0.55;
 
 // ======== Mesh ========
 
@@ -390,7 +395,7 @@ fn generate_receptacle(mesh: &mut Mesh) {
     {
         let z_rim = bowl_z(r_bowl);
         let r_stem = 0.047; // match stem top radius
-        let z_stem = -0.25;  // match stem top z
+        let z_stem = STEM_TOP_Z;
         let taper_depth = z_rim - z_stem;
         let steps_h = 12;
         let mut grid = vec![vec![[0.0f64; 3]; steps_a + 1]; steps_h + 1];
@@ -423,7 +428,7 @@ fn generate_stem(mesh: &mut Mesh) {
 
     for i in 0..=vsteps {
         let t = i as f64 / vsteps as f64;
-        let z = -0.25 - stem_height * t;
+        let z = STEM_TOP_Z - stem_height * t;
         let curve_x = stem_curve(t);
         let r = 0.035 + 0.012 * (1.0 - t);
 
@@ -469,11 +474,11 @@ fn add_leaf(mesh: &mut Mesh, pos: [f64; 3], angle: f64, size: f64) {
 
 fn generate_leaves(mesh: &mut Mesh) {
     let z1 = -1.3;
-    let t1 = (-z1 - 0.25) / 3.5;
+    let t1 = (STEM_TOP_Z - z1) / 3.5;
     let cx1 = stem_curve(t1);
 
     let z2 = -2.2;
-    let t2 = (-z2 - 0.25) / 3.5;
+    let t2 = (STEM_TOP_Z - z2) / 3.5;
     let cx2 = stem_curve(t2);
 
     add_leaf(mesh, [cx1, 0.0, z1], 0.3, 0.7);
