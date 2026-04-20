@@ -13,8 +13,10 @@ open rose.obj
 
 ## Model
 
-- 38 petals across 7 layers, spiraled by the golden angle
-- Each petal is a curved sheet (numerically integrated centerline) with cupping, ruffling, and a center vein
-- Petal bases attach along a parabolic bowl: `z = 0.12 - 1.5 r^2`
-- Per-vertex smooth normals; petal width is clamped to its angular share to avoid clipping neighbors
-- Receptacle, sepals, curved stem, and two compound leaves
+- Single continuous spiral surface — Paul Nylander's parametric rose
+  ([bugman123.com](http://bugman123.com/Math/Rose.lsp), 2009), vendored
+  at `bugman123.com/Math/Rose.lsp`
+- φ (tilt) decays exponentially with θ, so outer petals reflex while the
+  inner spiral tightens into a bud
+- 25 × 576 grid sampled over `x1 ∈ [0,1]`, `θ ∈ [-20π/9, 15π]`
+- Per-vertex smooth normals via finite differences
