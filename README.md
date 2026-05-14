@@ -1,6 +1,9 @@
 
 
 
+
+
+
 # rose3d
 
 Interactive 3D rose viewer — Paul Nylander's parametric rose surface
@@ -8,12 +11,9 @@ Interactive 3D rose viewer — Paul Nylander's parametric rose surface
 
 
 
-https://github.com/user-attachments/assets/c7593a41-de91-482b-8d54-4026d54ee627
+https://github.com/user-attachments/assets/47c54919-4c7c-473b-ba3f-1b2582e1f032
 
 
-
-
-![rose](screenshot.png)
 
 ## Run
 
