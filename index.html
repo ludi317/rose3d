@@ -48,9 +48,9 @@
     <label>Curvature 2: <span class="val" id="v-curve2"></span></label>
     <input type="range" id="curve2" min="0.5" max="1.5" step="0.01" value="1.2769">
   </div>
-  <button id="prebloom">Prebloom</button>
+  <button id="rosebud">Rosebud</button>
   <button id="bloom">Bloom</button>
-  <button id="reset">Reset to Nylander defaults</button>
+  <button id="reset">Reset</button>
   <div class="hint">Drag to orbit · scroll to zoom</div>
 </div>
 
@@ -154,7 +154,7 @@ document.getElementById('reset').addEventListener('click', () => {
   });
 });
 
-const prebloomPreset = { opening: 10, vDensity: 7.8, pAlign: 1.25, curve1: 5, curve2: 1 };
+const rosebudPreset = { opening: 10, vDensity: 20, pAlign: 1.5, curve1: -4.2, curve2: 1.5 };
 const setSliders = (values) => {
   for (const id in values) {
     const el = document.getElementById(id);
@@ -164,22 +164,22 @@ const setSliders = (values) => {
 };
 
 let bloomAnim = null;
-document.getElementById('prebloom').addEventListener('click', () => {
+document.getElementById('rosebud').addEventListener('click', () => {
   if (bloomAnim) { cancelAnimationFrame(bloomAnim); bloomAnim = null; }
-  setSliders(prebloomPreset);
+  setSliders(rosebudPreset);
 });
 
 document.getElementById('bloom').addEventListener('click', () => {
   if (bloomAnim) cancelAnimationFrame(bloomAnim);
-  setSliders(prebloomPreset);
+  setSliders(rosebudPreset);
   const start = performance.now();
   const dur = 3000;
   const step = (t) => {
     const k = Math.min(1, (t - start) / dur);
     const eased = 1 - Math.pow(1 - k, 3);  // cubic ease-out
     const frame = {};
-    for (const id in prebloomPreset) {
-      frame[id] = prebloomPreset[id] + (defaults[id] - prebloomPreset[id]) * eased;
+    for (const id in rosebudPreset) {
+      frame[id] = rosebudPreset[id] + (defaults[id] - rosebudPreset[id]) * eased;
     }
     setSliders(frame);
     bloomAnim = k < 1 ? requestAnimationFrame(step) : null;
